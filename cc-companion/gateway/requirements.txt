@@ -1,0 +1,3 @@
+# Claude Code Companion — Gateway 网关
+# 运行在用户电脑上的本地守护进程，连接 Claude Code 与 M5StickC S3 硬件
+aiohttp>=3.9.0          # HTTP /hook + WebSocket 服务端（单依赖覆盖双协议）

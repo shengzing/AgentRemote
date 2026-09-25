@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 8 章：展示与复盘</title>
+  <link rel="stylesheet" href="assets/course.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="52" height="34" rx="8" fill="#2563eb" stroke="#1f2937" stroke-width="4"/><rect x="22" y="7" width="20" height="10" rx="4" fill="#f4b740" stroke="#1f2937" stroke-width="4"/><g class="bot-body"><circle cx="24" cy="35" r="5" fill="#fff"/><circle cx="40" cy="35" r="5" fill="#fff"/><path d="M25 46q7 6 14 0" fill="none" stroke="#fff" stroke-width="4"/></g></svg>
+        <span>ESP32 小小发明家<small>第 8 章</small></span>
+      </a>
+      <div class="progress-pill"><span>进度</span><span class="progress-track"><span class="progress-fill" data-progress-fill></span></span><span data-progress-label>0/8</span></div>
+    </header>
+
+    <main class="main-content" id="main">
+      <section class="chapter-hero reveal" aria-labelledby="chapter-title">
+        <div>
+          <p class="eyebrow">小讲师时间</p>
+          <h1 id="chapter-title">展示与复盘</h1>
+          <p>发明家不只是把东西做出来，还要讲清楚它为什么有用、怎么工作、哪里还能改进。</p>
+          <div class="chapter-meta"><span class="tag">演讲</span><span class="tag blue">复盘</span><span class="tag green">证书</span></div>
+        </div>
+        <div class="wide-visual chapter-visual" aria-label="项目展示舞台">
+          <svg viewBox="0 0 320 250" role="img" aria-label="孩子站在展示台前，旁边有设备、草图和演讲卡片">
+            <rect width="320" height="250" fill="#fdefc9"/>
+            <rect x="40" y="160" width="240" height="26" fill="#f4b740" stroke="#1f2937" stroke-width="5"/>
+            <g><circle cx="120" cy="102" r="34" fill="#ffe0d8" stroke="#1f2937" stroke-width="5"/><circle cx="108" cy="96" r="5" fill="#1f2937"/><circle cx="132" cy="96" r="5" fill="#1f2937"/><path d="M108 116q12 9 24 0" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/><rect x="102" y="138" width="38" height="24" rx="6" fill="#2563eb" stroke="#1f2937" stroke-width="5"/></g>
+            <g><rect x="184" y="82" width="54" height="82" rx="10" fill="#f8fafc" stroke="#1f2937" stroke-width="5"/><rect x="192" y="94" width="38" height="38" rx="6" fill="#102a1f"/><text x="196" y="118" font-size="10" fill="#7ef0a8">任务</text><text x="194" y="152" font-size="10" font-weight="700">ESP32</text></g>
+            <g><rect x="42" y="54" width="52" height="36" rx="6" fill="#fff" stroke="#1f2937" stroke-width="4"/><path d="M50 78h36M50 68h24" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/></g>
+            <g><rect x="244" y="60" width="42" height="30" rx="6" fill="#d1fae5" stroke="#1f2937" stroke-width="4"/><text x="252" y="80" font-size="10" font-weight="700">讲稿</text></g>
+          </svg>
+        </div>
+      </section>
+
+      <section aria-labelledby="speech">
+        <div class="section-title" id="speech"><span class="num">1</span>一分钟讲稿模板</div>
+        <div class="wide-card">
+          <ol class="task-list">
+            <li>我发现的问题是：家人叮嘱的任务容易忘记。</li>
+            <li>我的方案是：做一个 ESP32 家庭任务提醒器。</li>
+            <li>它会接收网页任务，在屏幕上显示，我按键确认。</li>
+            <li>现在我来演示一次。</li>
+            <li>我遇到的问题是重复点击会让计数变多，我用状态判断解决了。</li>
+            <li>下一步我想加入到期提醒。</li>
+          </ol>
+          <p class="callout green"><strong>展示技巧</strong>先说问题，再演示，最后讲困难和改进。不要一开头就念代码。</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="poster">
+        <div class="section-title" id="poster"><span class="num">2</span>作品海报</div>
+        <div class="task-grid stagger">
+          <article class="task-card"><h3>问题区</h3><p>一句话写清楚为什么要做。</p></article>
+          <article class="task-card"><h3>结构图</h3><p>画网页、Wi-Fi、ESP32、屏幕和按键。</p></article>
+          <article class="task-card"><h3>演示照片</h3><p>放两张照片：发送任务、确认任务。</p></article>
+          <article class="task-card"><h3>我的学习</h3><p>写一个 bug 的发现和解决过程。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="review">
+        <div class="section-title" id="review"><span class="num">3</span>复盘四问</div>
+        <div class="two-col">
+          <div class="wide-card">
+            <h3>问自己</h3>
+            <ul class="task-list">
+              <li>哪个功能最有用？</li>
+              <li>哪个 bug 最难找？</li>
+              <li>家人用了以后提了什么建议？</li>
+              <li>如果再做一次，我会先改什么？</li>
+            </ul>
+          </div>
+          <div class="wide-card">
+            <h3>项目记录卡</h3>
+            <pre class="code-panel"><code>项目名称：家庭任务提醒器
+解决什么：日常叮嘱容易忘记
+输入：网页任务、按键
+输出：屏幕、状态、完成数
+最难问题：重复点击
+解决方法：只允许 waiting 状态计数</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="next">
+        <div class="section-title" id="next"><span class="num">4</span>下一步路线</div>
+        <div class="task-grid stagger">
+          <article class="project-card"><h3>Arduino C++</h3><p>学习 setup、loop、GPIO 和串口调试。</p></article>
+          <article class="project-card"><h3>更多传感器</h3><p>做房间环境站、浇花提醒器或距离警报。</p></article>
+          <article class="project-card"><h3>数据记录</h3><p>把每天完成的任务保存下来，做成图表。</p></article>
+          <article class="project-card"><h3>作品收纳</h3><p>给设备做外壳，让它更像真正的小产品。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="check">
+        <div class="section-title" id="check"><span class="num">5</span>毕业检查</div>
+        <div class="checklist-grid">
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="08"><span>我能用一分钟介绍项目。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="08"><span>我能演示发送、显示、确认三个步骤。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="08"><span>我能讲一个 bug 的解决过程。</span></label></article>
+        </div>
+        <p class="callout blue" style="margin-top:16px"><strong>恭喜</strong>完成这里，你就是 ESP32 小小发明家。下一步不是学更多名词，而是继续解决新的生活问题。</p>
+      </section>
+    </main>
+
+    <nav class="chapter-nav" aria-label="章节导航">
+      <a class="button ghost" href="07-family-reminder-project.html">上一章</a>
+      <a class="button primary" href="index.html">回到任务地图</a>
+    </nav>
+    <footer class="footer"><p>展示时慢一点，说清楚，观众会喜欢你的作品。</p></footer>
+  </div>
+  <script src="assets/course.js"></script>
+</body>
+</html>
+

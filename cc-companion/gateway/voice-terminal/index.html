@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CC Text Terminal</title>
+    <link rel="stylesheet" href="/terminal/terminal.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>CC Terminal</h1>
+            <div class="header-right">
+                <span id="cc-count" class="cc-count hidden">0 个终端</span>
+                <button id="refresh-btn" class="refresh-btn hidden" title="刷新终端列表">↻</button>
+                <div id="status" class="status idle">未唤醒</div>
+            </div>
+        </header>
+
+        <div id="feedback" class="feedback">点击下方按钮连接网关</div>
+
+        <main>
+            <section id="cc-list" class="cc-list hidden">
+                <h2>选择终端</h2>
+                <div id="cc-empty" class="cc-empty hidden">暂无已接入的终端</div>
+                <div id="cc-rows"></div>
+            </section>
+
+            <section id="text-section" class="text-section hidden">
+                <div id="selected-target" class="selected-target"></div>
+                <label class="input-label" for="command-input">输入指令</label>
+                <textarea id="command-input" rows="5" placeholder="输入要发送到 Claude Code 的指令"></textarea>
+                <button id="confirm-btn" class="confirm-btn">确认</button>
+            </section>
+
+            <section id="result-section" class="result-section hidden">
+                <div id="result-message"></div>
+                <button id="new-round-btn" class="secondary-btn">新一轮</button>
+            </section>
+
+            <section id="pairing-section" class="pairing-section hidden">
+                <input type="text" id="pairing-code" placeholder="输入6位配对码" maxlength="6" inputmode="numeric">
+                <button id="pair-btn" class="primary-btn">配对</button>
+            </section>
+        </main>
+
+        <button id="wake-btn" class="wake-btn">唤醒</button>
+    </div>
+
+    <script src="/terminal/terminal.js"></script>
+</body>
+</html>

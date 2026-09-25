@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Companion Simulator</title>
+  <link rel="stylesheet" href="/simulator/simulator.css?v=cb17">
+</head>
+<body>
+  <main class="workbench">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">M5StickC S3 / desktop twin</p>
+      <h1 id="page-title">Companion<br><em>Simulator</em></h1>
+      <p class="lede">在不烧录设备的情况下，用浏览器模拟一台已配对的 Companion，验证 Hook、状态提醒、目标选择与 tmux 注入。</p>
+      <div class="signal-row" aria-label="模拟器状态">
+        <span id="connection-light" class="signal-light offline"></span>
+        <span id="connection-label">未连接</span>
+      </div>
+      <p class="hint">右侧 <em>设备操作</em> 区域有完整的单键交互说明。先在右侧配对，再点击「分析」按钮体验。</p>
+    </section>
+
+    <section class="device-area" aria-label="M5Stick S3 设备模拟器">
+      <div class="device-shadow"></div>
+      <div class="device-shell">
+        <div class="speaker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="screen-bezel">
+          <div id="screen" class="screen list-screen" aria-live="polite">
+            <div class="screen-header">
+              <span id="screen-target">CC --</span>
+              <span id="dnd-indicator" class="dnd-indicator hidden">🌙 DND</span>
+              <span id="screen-network">OFFLINE</span>
+            </div>
+            <div id="screen-rows" class="screen-rows">
+              <p class="empty-state">等待网关连接</p>
+            </div>
+            <div id="detail-view" class="detail-view hidden">
+              <div id="detail-header" class="detail-header"></div>
+
+              <div id="detail-list" class="detail-subview">
+                <div class="detail-rows-wrap">
+                  <div id="detail-rows" class="detail-rows"></div>
+                </div>
+                <div id="detail-scroll-hint" class="detail-scroll-hint"></div>
+              </div>
+
+              <div id="detail-recording" class="detail-subview detail-recording hidden">
+                <div class="rec-head">● REC → #<span id="rec-target-code">1</span></div>
+                <div class="rec-bar"><div id="rec-bar-fill"></div></div>
+                <div class="rec-timer" id="rec-timer">0.0s / 1.5s</div>
+                <div class="rec-hint">按住说话 · 松开结束</div>
+              </div>
+
+              <div id="detail-transcribing" class="detail-subview detail-transcribing hidden">
+                <div class="tr-head">… Whisper 转写中</div>
+                <div class="tr-target">→ #<span id="tr-target-code">1</span></div>
+                <div class="tr-spinner">●●●</div>
+              </div>
+
+              <div id="detail-ready" class="detail-subview detail-ready hidden">
+                <div class="ready-head">→ #<span id="ready-target-code">1</span> 转写就绪</div>
+                <div id="ready-text" class="ready-text">—</div>
+                <div class="ready-hint">短按发送 · 长按重录 · 三连击取消</div>
+              </div>
+
+              <div id="detail-result" class="detail-subview detail-result hidden">
+                <div class="result-head" id="result-head">已发送</div>
+                <div id="result-text" class="result-text">—</div>
+                <div class="result-hint">短按返回详情</div>
+              </div>
+            </div>
+            <div id="target-picker" class="target-picker hidden" role="dialog" aria-label="目标选择">
+              <div class="picker-title"><span>选择目标</span><span id="picker-network">ONLINE</span></div>
+              <ul id="picker-list"></ul>
+              <div class="picker-hint">↑/↓ 切换 · Enter 选定 · Esc 退出</div>
+            </div>
+          </div>
+        </div>
+        <button id="device-button" class="device-button" aria-label="模拟 M5 主按键 (短按=下一项，长按=录音，双击=换目标)">M5</button>
+        <span class="mic-mark" aria-hidden="true"></span>
+        <span class="brand" aria-hidden="true">CC / S3</span>
+      </div>
+      <button id="next-button" class="control control-next" disabled>短按：下一项 (J)</button>
+      <button id="record-button" class="control control-record" disabled>长按：录音 (R)</button>
+    </section>
+
+    <section class="console" aria-label="设备配对与模拟操作">
+      <div class="console-topline">
+        <span>LINK CONSOLE</span>
+        <span id="revision-label">REV 0</span>
+      </div>
+
+      <button id="inject-toggle" class="inject-toggle inject-toggle-inline" type="button" aria-controls="inject-drawer" aria-expanded="false">状态注入 ▾</button>
+      <aside id="inject-drawer" class="inject-drawer" aria-hidden="true" aria-label="状态注入面板">
+        <div class="inject-title">
+          <span>状态注入面板</span>
+          <button id="inject-close" class="inject-close" type="button" aria-label="关闭">×</button>
+        </div>
+        <p class="inject-hint">点击预设按钮可直接向 Gateway 注入对应事件；也可填写自定义表单。</p>
+        <div class="inject-presets" id="inject-presets">
+          <button type="button" data-preset="permission">❓ 注入 Notification (权限确认)</button>
+          <button type="button" data-preset="await_input">… 注入 Notification (等待输入)</button>
+          <button type="button" data-preset="working">⏵ 注入 PreToolUse (工作中)</button>
+          <button type="button" data-preset="done">✓ 注入 Stop (完成)</button>
+          <button type="button" data-preset="error">✗ 注入 Stop (错误)</button>
+        </div>
+        <form id="inject-form" class="inject-form" novalidate>
+          <div class="form-row"><label for="inject-cc">cc_code</label><select id="inject-cc"></select></div>
+          <div class="form-row"><label for="inject-session">session_id</label><input id="inject-session" type="text" autocomplete="off" value="browser-injected-1"></div>
+          <div class="form-row"><label for="inject-event">hook_event</label>
+            <select id="inject-event">
+              <option value="Notification">Notification</option>
+              <option value="PreToolUse">PreToolUse</option>
+              <option value="PostToolUse">PostToolUse</option>
+              <option value="Stop">Stop</option>
+            </select>
+          </div>
+          <div class="form-row"><label for="inject-message">message</label><textarea id="inject-message" rows="2" placeholder="例如：等待权限: Bash rm -rf /tmp/foo"></textarea></div>
+          <div class="submit-row">
+            <button type="submit">注入到 #<span id="inject-cc-preview">1</span></button>
+            <button type="button" id="inject-reset" class="secondary">清空所有状态</button>
+          </div>
+        </form>
+      </aside>
+
+      <form id="connect-form" class="connect-form" novalidate>
+        <label>
+          <span>设备 ID</span>
+          <input id="device-id" maxlength="64" value="browser-simulator" autocomplete="off" required>
+        </label>
+        <label>
+          <span>配对码</span>
+          <input id="pairing-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="首次连接时输入网关终端显示的 6 位数字">
+        </label>
+        <button id="connect-button" type="submit">配对并连接</button>
+      </form>
+
+      <section class="usage" aria-label="设备操作说明">
+        <div class="usage-title">设备操作 · 单键交互</div>
+        <ul class="usage-list">
+          <li><span class="gesture">短按</span><span class="what">列表=下一项 · 详情=滚行 · 转写就绪=发送</span></li>
+          <li><span class="gesture">长按 0.5s</span><span class="what">列表=进入详情 · 详情=开始录音</span></li>
+          <li><span class="gesture">三连击</span><span class="what">转写=取消 · 详情=返回列表</span></li>
+          <li><span class="gesture">详情按 <kbd>F</kbd></span><span class="what">切换 DND（face-down 模拟）</span></li>
+        </ul>
+        <div class="usage-kb">
+          <strong>键盘调试入口</strong>：<kbd>J</kbd>=短按 · <kbd>R</kbd>=长按 · <kbd>J</kbd> 连按 3 次=三连击
+        </div>
+      </section>
+
+      <section id="transcript-panel" class="transcript-panel hidden" aria-labelledby="transcript-title">
+        <div class="panel-title"><span id="transcript-title">模拟转写</span><span id="draft-target"></span></div>
+        <div class="recording-progress" aria-hidden="true"><span id="recording-progress-bar"></span></div>
+        <div id="recording-status" class="recording-status" aria-live="polite"><span class="pulse"></span><span id="recording-status-text">准备录音</span></div>
+        <label for="draft-text" class="visually-hidden">转写文本（隐藏，作为数据源）</label>
+        <textarea id="draft-text" class="visually-hidden" maxlength="160" rows="3" placeholder="例如：允许执行该命令"></textarea>
+        <div class="draft-actions">
+          <button id="send-button" type="button">发送至目标 (Enter)</button>
+          <button id="rerecord-button" type="button" class="warn">重录 (R 长按)</button>
+          <button id="retarget-button" type="button" class="secondary">换目标 (D / 双击)</button>
+          <button id="cancel-button" type="button" class="secondary">取消 (Esc)</button>
+        </div>
+      </section>
+
+      <ol id="event-log" class="event-log" aria-label="通信日志">
+        <li><time>--:--:--</time><span>输入配对码后连接本机 Gateway。</span></li>
+      </ol>
+    </section>
+  </main>
+  <script src="/simulator/simulator.js?v=cb19" defer></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 3 章：输入和输出</title>
+  <link rel="stylesheet" href="assets/course.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="52" height="34" rx="8" fill="#2563eb" stroke="#1f2937" stroke-width="4"/><rect x="22" y="7" width="20" height="10" rx="4" fill="#f4b740" stroke="#1f2937" stroke-width="4"/><g class="bot-body"><circle cx="24" cy="35" r="5" fill="#fff"/><circle cx="40" cy="35" r="5" fill="#fff"/><path d="M25 46q7 6 14 0" fill="none" stroke="#fff" stroke-width="4"/></g></svg>
+        <span>ESP32 小小发明家<small>第 3 章</small></span>
+      </a>
+      <div class="progress-pill"><span>进度</span><span class="progress-track"><span class="progress-fill" data-progress-fill></span></span><span data-progress-label>0/8</span></div>
+    </header>
+
+    <main class="main-content" id="main">
+      <section class="chapter-hero reveal" aria-labelledby="chapter-title">
+        <div>
+          <p class="eyebrow">硬件三兄弟</p>
+          <h1 id="chapter-title">输入、处理、输出</h1>
+          <p>所有 ESP32 项目都可以先拆成这三块。按键是输入，程序是处理，屏幕和声音是输出。</p>
+          <div class="chapter-meta"><span class="tag blue">按键</span><span class="tag">屏幕</span><span class="tag green">倒计时</span></div>
+        </div>
+        <div class="wide-visual chapter-visual" aria-label="输入处理输出流程图">
+          <svg viewBox="0 0 320 250" role="img" aria-label="按键输入进入程序处理，最后输出到屏幕、灯光和声音">
+            <rect width="320" height="250" fill="#fdefc9"/>
+            <g><rect x="20" y="62" width="74" height="72" rx="8" fill="#ffe0d8" stroke="#1f2937" stroke-width="5"/><circle cx="57" cy="98" r="18" fill="#e24c4c" stroke="#1f2937" stroke-width="4"/><text x="38" y="152" font-size="13" font-weight="700">输入</text></g>
+            <path d="M94 98h42" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>
+            <g><rect x="136" y="48" width="76" height="100" rx="8" fill="#dbeafe" stroke="#1f2937" stroke-width="5"/><text x="154" y="92" font-size="14" font-weight="700">程序</text><text x="156" y="118" font-size="12">判断</text><text x="156" y="140" font-size="12">计时</text></g>
+            <path d="M212 98h40" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>
+            <g><rect x="252" y="30" width="48" height="38" rx="6" fill="#102a1f" stroke="#1f2937" stroke-width="4"/><rect x="256" y="86" width="20" height="34" rx="6" fill="#f4b740" stroke="#1f2937" stroke-width="4"/><path d="M258 146q18 16 36 0" fill="none" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/><text x="244" y="182" font-size="13" font-weight="700">输出</text></g>
+          </svg>
+        </div>
+      </section>
+
+      <section aria-labelledby="concepts">
+        <div class="section-title" id="concepts"><span class="num">1</span>先认识三种输出</div>
+        <div class="concept-grid stagger">
+          <article class="concept-card"><h3>屏幕输出</h3><p>适合显示任务、数字、表情和状态。我们的最终项目会大量使用屏幕。</p></article>
+          <article class="concept-card"><h3>灯光输出</h3><p>适合提醒。比如任务来了亮红色，确认后亮绿色。</p></article>
+          <article class="concept-card"><h3>声音输出</h3><p>适合吸引注意，但要有“安静模式”，不然会吵到家人。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="project">
+        <div class="section-title" id="project"><span class="num">2</span>本章项目：10 秒小闹钟</div>
+        <div class="two-col">
+          <div class="wide-card">
+            <h3>你要做出来什么</h3>
+            <ol class="task-list">
+              <li>按主键开始倒计时。</li>
+              <li>屏幕显示 10、9、8...1。</li>
+              <li>到 0 时显示“时间到”。</li>
+              <li>播放一声提示，或让屏幕变红。</li>
+            </ol>
+            <p class="callout blue"><strong>为什么有用</strong>它可以变成刷牙计时、休息计时、专注计时。</p>
+          </div>
+          <div class="wide-card">
+            <h3>代码长什么样</h3>
+            <pre class="code-panel"><code><span class="comment"># 先用 UIFlow2 积木搭建，再看类似代码</span>
+seconds = <span class="number">10</span>
+
+<span class="keyword">while</span> seconds &gt; <span class="number">0</span>:
+    show(seconds)
+    sleep(<span class="number">1</span>)
+    seconds = seconds - <span class="number">1</span>
+
+show(<span class="string">"时间到"</span>)</code></pre>
+            <p>现在只要能看懂变量和循环。第 5 章再亲手修改。</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="states">
+        <div class="section-title" id="states"><span class="num">3</span>状态切换</div>
+        <p class="lead">设备不是只会做一件事。它会根据状态改变行为，这和 Scratch 里切换造型很像。</p>
+        <div class="wide-card" style="margin-top:18px">
+          <div class="table-wrap" style="box-shadow:none;border:0;background:transparent">
+            <table>
+              <thead><tr><th>状态</th><th>屏幕显示</th><th>按主键后</th></tr></thead>
+              <tbody>
+                <tr><td>待机</td><td>我准备好了</td><td>开始倒计时</td></tr>
+                <tr><td>运行</td><td>10、9、8...</td><td>暂停</td></tr>
+                <tr><td>结束</td><td>时间到</td><td>回到待机</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="debug">
+        <div class="section-title" id="debug"><span class="num">4</span>调试口诀</div>
+        <div class="step-grid stagger">
+          <article class="step-card"><h3>说出预计</h3><p>“我以为按按键后会开始。”</p></article>
+          <article class="step-card"><h3>说出实际</h3><p>“实际屏幕没有变化。”</p></article>
+          <article class="step-card"><h3>检查输入</h3><p>按键真的被触发了吗？</p></article>
+          <article class="step-card"><h3>检查输出</h3><p>屏幕是不是在别的地方显示了？</p></article>
+          <article class="step-card"><h3>小步修改</h3><p>只改一个积木，再试一次。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="check">
+        <div class="section-title" id="check"><span class="num">5</span>通关检查</div>
+        <div class="checklist-grid">
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="03"><span>我能说出至少两种输入和三种输出。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="03"><span>我完成了 10 秒小闹钟。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="03"><span>我能解释待机、运行、结束三种状态。</span></label></article>
+        </div>
+        <details class="quiz" style="margin-top:16px"><summary>小侦探问答：倒计时里哪个是变量？</summary><p>seconds 是变量。它从 10 开始，每次减 1，直到变成 0。</p></details>
+      </section>
+    </main>
+
+    <nav class="chapter-nav" aria-label="章节导航">
+      <a class="button ghost" href="02-scratch-to-hardware.html">上一章</a>
+      <a class="button primary" href="04-sensor-detective.html">下一章：传感器侦探</a>
+    </nav>
+    <footer class="footer"><p>输入输出想清楚后，设备就有了“手脚”和“表情”。</p></footer>
+  </div>
+  <script src="assets/course.js"></script>
+</body>
+</html>
+

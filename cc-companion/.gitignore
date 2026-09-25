@@ -1,0 +1,8 @@
+.venv/
+gateway/__pycache__/
+gateway/**/__pycache__/
+gateway/.pytest_cache/
+firmware/build/
+.cc-companion-pairings.json
+*.wav
+*.pcm

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 5 章：MicroPython 起步</title>
+  <link rel="stylesheet" href="assets/course.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="52" height="34" rx="8" fill="#2563eb" stroke="#1f2937" stroke-width="4"/><rect x="22" y="7" width="20" height="10" rx="4" fill="#f4b740" stroke="#1f2937" stroke-width="4"/><g class="bot-body"><circle cx="24" cy="35" r="5" fill="#fff"/><circle cx="40" cy="35" r="5" fill="#fff"/><path d="M25 46q7 6 14 0" fill="none" stroke="#fff" stroke-width="4"/></g></svg>
+        <span>ESP32 小小发明家<small>第 5 章</small></span>
+      </a>
+      <div class="progress-pill"><span>进度</span><span class="progress-track"><span class="progress-fill" data-progress-fill></span></span><span data-progress-label>0/8</span></div>
+    </header>
+
+    <main class="main-content" id="main">
+      <section class="chapter-hero reveal" aria-labelledby="chapter-title">
+        <div>
+          <p class="eyebrow">第二门语言</p>
+          <h1 id="chapter-title">MicroPython 起步</h1>
+          <p>你已经会用积木表达想法。现在把同样的想法写成文字。它仍然是 Python，只是住在 ESP32 里。</p>
+          <div class="chapter-meta"><span class="tag blue">Python</span><span class="tag">Thonny</span><span class="tag green">代码修改</span></div>
+        </div>
+        <div class="wide-visual chapter-visual" aria-label="积木变成代码示意图">
+          <svg viewBox="0 0 320 250" role="img" aria-label="左边是彩色积木，右边是 Python 代码行，中间是转换箭头">
+            <rect width="320" height="250" fill="#fdefc9"/>
+            <g><rect x="22" y="40" width="112" height="26" rx="6" fill="#e24c4c" stroke="#1f2937" stroke-width="4"/><text x="34" y="59" font-size="12" font-weight="700" fill="#fff">当按键按下</text><rect x="22" y="78" width="96" height="26" rx="6" fill="#f4b740" stroke="#1f2937" stroke-width="4"/><text x="34" y="97" font-size="12" font-weight="700">计数加一</text><rect x="22" y="116" width="112" height="26" rx="6" fill="#2563eb" stroke="#1f2937" stroke-width="4"/><text x="34" y="135" font-size="12" font-weight="700" fill="#fff">显示计数</text></g>
+            <path d="M146 90h42" stroke="#1f2937" stroke-width="5" stroke-linecap="round"/>
+            <g><rect x="194" y="40" width="104" height="102" rx="8" fill="#172033" stroke="#1f2937" stroke-width="5"/><text x="206" y="68" font-size="10" fill="#e9edf5">count += 1</text><text x="206" y="92" font-size="10" fill="#e9edf5">show(count)</text><text x="206" y="116" font-size="10" fill="#9fb2cc"># 显示结果</text></g>
+            <rect x="52" y="174" width="216" height="42" rx="8" fill="#d1fae5" stroke="#1f2937" stroke-width="4"/>
+            <text x="82" y="201" font-size="13" font-weight="700">同一个想法，两种写法</text>
+          </svg>
+        </div>
+      </section>
+
+      <section aria-labelledby="difference">
+        <div class="section-title" id="difference"><span class="num">1</span>MicroPython 和普通 Python</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>对比</th><th>普通 Python</th><th>MicroPython</th></tr></thead>
+            <tbody>
+              <tr><td>住在哪里</td><td>Mac 电脑里</td><td>ESP32 芯片里</td></tr>
+              <tr><td>适合做什么</td><td>网页、数据处理、电脑工具</td><td>灯光、屏幕、传感器、Wi-Fi 硬件</td></tr>
+              <tr><td>标准库</td><td>很完整</td><td>精简版，只保留常用部分</td></tr>
+              <tr><td>安装库</td><td>pip 可以装很多大库</td><td>只能装轻量库</td></tr>
+              <tr><td>控制硬件</td><td>要借助电脑系统</td><td>直接用 machine 等模块</td></tr>
+              <tr><td>共同点</td><td colspan="2">变量、循环、条件、函数、列表的写法基本相通</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="thonny">
+        <div class="section-title" id="thonny"><span class="num">2</span>用 Thonny 连接设备</div>
+        <div class="step-grid stagger">
+          <article class="step-card"><h3>1. 打开 Thonny</h3><p>右下角选择 MicroPython (ESP32)。</p></article>
+          <article class="step-card"><h3>2. 选择串口</h3><p>选择你的开发板串口，例如 usbmodem 或 SLAB_USBtoUART。</p></article>
+          <article class="step-card"><h3>3. 进入 REPL</h3><p>如果看到提示符，说明电脑和 ESP32 正在对话。</p></article>
+          <article class="step-card"><h3>4. 保存 main.py</h3><p>把程序保存到设备后，开机就能自动运行。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="code-basics">
+        <div class="section-title" id="code-basics"><span class="num">3</span>五个基础积木的代码样子</div>
+        <div class="two-col">
+          <div class="wide-card">
+            <h3>任务计数器</h3>
+            <pre class="code-panel"><code>count = <span class="number">0</span>
+
+<span class="keyword">def</span> confirm_task():
+    <span class="keyword">global</span> count
+    count = count + <span class="number">1</span>
+    show(<span class="string">"收到"</span>, count)
+
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    <span class="keyword">if</span> button_pressed():
+        confirm_task()</code></pre>
+            <p>先不急着完整写出硬件代码。重点是知道：变量保存数字，函数打包动作，循环持续检查。</p>
+          </div>
+          <div class="wide-card">
+            <h3>代码阅读三问</h3>
+            <ul class="task-list">
+              <li>哪一行创建变量？</li>
+              <li>哪一段在重复？</li>
+              <li>什么条件下会执行 confirm_task？</li>
+            </ul>
+            <p class="callout green"><strong>学习方法</strong>先读，再改数字和文字，最后自己写一小段。</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="project">
+        <div class="section-title" id="project"><span class="num">4</span>本章项目：家庭任务计数器</div>
+        <div class="task-grid stagger">
+          <article class="task-card"><h3>功能一：显示任务数</h3><p>屏幕显示今天完成了几件任务。</p></article>
+          <article class="task-card"><h3>功能二：按键加一</h3><p>每确认一个任务，数字加一。</p></article>
+          <article class="task-card"><h3>功能三：长按清零</h3><p>晚上长按主键，准备迎接新一天。</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="errors">
+        <div class="section-title" id="errors"><span class="num">5</span>常见错误急救包</div>
+        <div class="wide-card">
+          <table>
+            <thead><tr><th>错误</th><th>常因为什么</th><th>怎么改</th></tr></thead>
+            <tbody>
+              <tr><td>IndentationError</td><td>缩进不对</td><td>让同一层代码对齐，通常用 4 个空格</td></tr>
+              <tr><td>NameError</td><td>变量名拼错或还没创建</td><td>检查拼写，先给变量赋值</td></tr>
+              <tr><td>SyntaxError</td><td>少了冒号、括号或引号</td><td>看错误行附近有没有漏符号</td></tr>
+              <tr><td>程序不运行</td><td>文件名不是 main.py 或没保存到设备</td><td>保存到设备并重启</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="check">
+        <div class="section-title" id="check"><span class="num">6</span>通关检查</div>
+        <div class="checklist-grid">
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="05"><span>我能说出 MicroPython 和普通 Python 的差别。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="05"><span>我能修改一段 MicroPython 的文字和数字。</span></label></article>
+          <article class="check-card"><label class="check-row"><input type="checkbox" data-chapter-checkbox="05"><span>我完成了家庭任务计数器。</span></label></article>
+        </div>
+        <details class="quiz" style="margin-top:16px"><summary>小侦探问答：为什么函数有用？</summary><p>函数把一组动作打包，起一个名字。以后想做这件事，只要调用这个名字，代码更清楚也不容易重复。</p></details>
+      </section>
+    </main>
+
+    <nav class="chapter-nav" aria-label="章节导航">
+      <a class="button ghost" href="04-sensor-detective.html">上一章</a>
+      <a class="button" href="python-basics.html">Python 基础补充页</a>
+      <a class="button primary" href="06-wifi-task-station.html">下一章：Wi-Fi 任务站</a>
+    </nav>
+    <footer class="footer"><p>开始写代码时，慢就是快：先读懂，再小改，再自己写。</p></footer>
+  </div>
+  <script src="assets/course.js"></script>
+</body>
+</html>
