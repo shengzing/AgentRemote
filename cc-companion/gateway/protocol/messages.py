@@ -32,8 +32,8 @@ def decode_client_message(payload: Dict[str, Any]) -> Dict[str, Any]:
         }
     if message_type == "device.hello":
         token = payload.get("token")
-        if not isinstance(token, str) or not token:
-            raise ProtocolError("token must be a non-empty string")
+        if not isinstance(token, str):
+            raise ProtocolError("token must be a string")
         capabilities = _capabilities(payload.get("capabilities"))
         return {
             "version": PROTOCOL_VERSION,

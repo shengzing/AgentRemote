@@ -28,11 +28,13 @@ class DeviceAccessLayer:
         registry: SessionRegistry,
         tmux: TmuxInjector,
         recording: RecordingService,
+        require_pairing: bool = False,
     ):
         self._pairing = pairing
         self._registry = registry
         self._tmux = tmux
         self._recording = recording
+        self._require_pairing = require_pairing
         self._sessions: Dict[str, DeviceSession] = {}
         self._active_recordings: Dict[str, str] = {}
 
@@ -42,9 +44,19 @@ class DeviceAccessLayer:
         """Exchange a pairing code for a token. Returns None on failure."""
         return self._pairing.complete(device_id, code)
 
+    def auto_pair(self, device_id: str) -> str:
+        """Auto-pair for personal use: generate and store a token for the device."""
+        import secrets
+        token = secrets.token_urlsafe(32)
+        from adapters.pairing import _hash_token
+        tokens = self._pairing._store.load()
+        tokens[device_id] = _hash_token(token)
+        self._pairing._store.save(tokens)
+        return token
+
     def connect(self, session: DeviceSession, token: str) -> bool:
         """Authenticate and register a session. Does not push snapshot."""
-        if not self._pairing.verify(session.device_id, token):
+        if self._require_pairing and not self._pairing.verify(session.device_id, token):
             return False
         self._sessions[session.device_id] = session
         return True

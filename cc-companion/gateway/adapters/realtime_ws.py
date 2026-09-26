@@ -98,13 +98,12 @@ async def websocket_handler(request: web.Request) -> web.StreamResponse:
 
             if message_type == "device.hello":
                 session.init(message["device_id"], message["capabilities"])
-                if access.connect(session, message["token"]):
+                if access.connect(session, message.get("token", "")):
                     await session.send(_device_ready_message(session.capabilities))
-                    if CAPABILITY_DISPLAY in session.capabilities:
-                        await access.push_snapshot(session.device_id)
                 else:
                     await _send_error(websocket, "UNAUTHORIZED")
-                    # Keep the connection open so the device can send pair.complete
+                if CAPABILITY_DISPLAY in session.capabilities:
+                    await access.push_snapshot(session.device_id)
                 continue
 
             if not session.device_id or not access.is_online(session.device_id):

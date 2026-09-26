@@ -21,7 +21,6 @@
 
         <main>
             <section id="cc-list" class="cc-list hidden">
-                <h2>选择终端</h2>
                 <div id="cc-empty" class="cc-empty hidden">暂无已接入的终端</div>
                 <div id="cc-rows"></div>
             </section>
@@ -30,17 +29,13 @@
                 <div id="selected-target" class="selected-target"></div>
                 <label class="input-label" for="command-input">输入指令</label>
                 <textarea id="command-input" rows="5" placeholder="输入要发送到 Claude Code 的指令"></textarea>
+                <button id="back-btn" class="back-btn">← 返回列表</button>
                 <button id="confirm-btn" class="confirm-btn">确认</button>
             </section>
 
             <section id="result-section" class="result-section hidden">
                 <div id="result-message"></div>
                 <button id="new-round-btn" class="secondary-btn">新一轮</button>
-            </section>
-
-            <section id="pairing-section" class="pairing-section hidden">
-                <input type="text" id="pairing-code" placeholder="输入6位配对码" maxlength="6" inputmode="numeric">
-                <button id="pair-btn" class="primary-btn">配对</button>
             </section>
         </main>
 

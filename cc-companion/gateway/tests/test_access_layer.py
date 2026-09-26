@@ -77,8 +77,23 @@ class DeviceAccessLayerTests(unittest.IsolatedAsyncioTestCase):
         token = self.access.pair("dev-1", "123456")
         session = FakeDeviceSession("dev-1", frozenset({"input"}))
         ok = self.access.connect(session, "wrong-token")
+        # Default require_pairing=False: wrong token still connects (auto-pair)
+        self.assertTrue(ok)
+        self.assertTrue(self.access.is_online("dev-1"))
+
+    async def test_connect_with_wrong_token_fails_when_pairing_required(self):
+        access = DeviceAccessLayer(
+            pairing=self.pairing,
+            registry=self.registry,
+            tmux=self.tmux,
+            recording=self.recording,
+            require_pairing=True,
+        )
+        token = access.pair("dev-strict", "123456")
+        session = FakeDeviceSession("dev-strict", frozenset({"input"}))
+        ok = access.connect(session, "wrong-token")
         self.assertFalse(ok)
-        self.assertFalse(self.access.is_online("dev-1"))
+        self.assertFalse(access.is_online("dev-strict"))
 
     async def test_display_device_gets_snapshot(self):
         session = self._pair_and_connect("dev-display")

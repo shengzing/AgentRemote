@@ -15,19 +15,16 @@ const elements = {
     selectedTarget: document.getElementById("selected-target"),
     commandInput: document.getElementById("command-input"),
     confirmBtn: document.getElementById("confirm-btn"),
+    backBtn: document.getElementById("back-btn"),
     resultSection: document.getElementById("result-section"),
     resultMessage: document.getElementById("result-message"),
     newRoundBtn: document.getElementById("new-round-btn"),
-    pairingSection: document.getElementById("pairing-section"),
-    pairingCode: document.getElementById("pairing-code"),
-    pairBtn: document.getElementById("pair-btn"),
 };
 
 const state = {
     ws: null,
     deviceId: null,
     token: null,
-    paired: false,
     authenticated: false,
     sessions: [],
     selectedCcCode: null,
@@ -39,7 +36,6 @@ const state = {
 const STATUS_TEXT = {
     idle: "未唤醒",
     connecting: "连接中...",
-    pairing: "等待配对",
     connected: "已连接",
     selecting: "选择终端",
     typing: "输入指令",
@@ -61,7 +57,7 @@ function setFeedback(message, type) {
 }
 
 function showSection(...sections) {
-    const all = ["ccList", "textSection", "resultSection", "pairingSection"];
+    const all = ["ccList", "textSection", "resultSection"];
     all.forEach((name) => {
         if (sections.includes(name)) {
             elements[name].classList.remove("hidden");
@@ -95,24 +91,14 @@ function connectWebSocket() {
     state.deviceId = generateDeviceId();
 
     state.ws.onopen = () => {
-        const token = getStoredToken();
-        if (token) {
-            setFeedback("已连接网关，正在认证...", "info");
-            sendHello(token);
-        } else {
-            setStatus("pairing");
-            setFeedback("已连接网关，请输入配对码", "info");
-            showSection("pairingSection");
-            elements.pairingCode.focus();
-        }
+        setFeedback("已连接网关...", "info");
+        sendHello(getStoredToken() || "");
     };
 
     state.ws.onclose = () => {
         setStatus("idle");
         state.authenticated = false;
-        if (state.phase === "pairing") {
-            setFeedback("正在等待配对输入", "info");
-        } else if (state.phase === "sent") {
+        if (state.phase === "sent") {
             // keep success state
         } else {
             setFeedback("连接已断开，点击唤醒重新连接", "error");
@@ -154,15 +140,11 @@ function sendMessage(message) {
 
 function handleMessage(message) {
     switch (message.type) {
-        case "pair.complete":
-            if (message.ok && message.token) {
-                setFeedback("配对成功，正在认证...", "success");
-                storeToken(message.token);
-                sendHello(message.token);
-            }
-            break;
         case "device.ready":
             state.authenticated = true;
+            if (message.token) {
+                storeToken(message.token);
+            }
             elements.refreshBtn.classList.remove("hidden");
             if (!state.refreshing) {
                 setStatus("selecting");
@@ -187,21 +169,7 @@ function handleMessage(message) {
             handleAck(message);
             break;
         case "device.error":
-            if (message.error === "UNAUTHORIZED") {
-                localStorage.removeItem("cc-terminal-token");
-                state.token = null;
-                state.authenticated = false;
-                setStatus("pairing");
-                setFeedback("Token 已失效，请输入当前配对码重新配对", "info");
-                showSection("pairingSection");
-                elements.pairingCode.focus();
-            } else if (message.error === "PAIRING_FAILED") {
-                setFeedback("配对失败：配对码错误或已过期", "error");
-                showSection("pairingSection");
-                elements.pairingCode.focus();
-            } else {
-                showError(message.error);
-            }
+            showError(message.error);
             break;
     }
 }
@@ -381,32 +349,6 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-elements.pairBtn.addEventListener("click", () => {
-    const code = elements.pairingCode.value.trim();
-    if (code.length !== 6) {
-        elements.pairingCode.style.borderColor = "#f55";
-        return;
-    }
-    elements.pairingCode.style.borderColor = "#333";
-    setFeedback("正在配对...", "info");
-    sendMessage({
-        version: PROTOCOL_VERSION,
-        type: "pair.complete",
-        device_id: state.deviceId,
-        code: code,
-    });
-});
-
-elements.pairingCode.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-        elements.pairBtn.click();
-    }
-});
-
-elements.pairingCode.addEventListener("input", (event) => {
-    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 6);
-});
-
 elements.commandInput.addEventListener("input", updateConfirmButton);
 
 elements.commandInput.addEventListener("keydown", (event) => {
@@ -419,6 +361,8 @@ elements.commandInput.addEventListener("keydown", (event) => {
 });
 
 elements.confirmBtn.addEventListener("click", sendMessageToCc);
+
+elements.backBtn.addEventListener("click", startNewRound);
 
 elements.newRoundBtn.addEventListener("click", startNewRound);
 

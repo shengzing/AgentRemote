@@ -10,13 +10,29 @@ class SessionLimitError(RuntimeError):
 
 
 class SessionRegistry:
-    def __init__(self, max_sessions: int = 8, expiry_seconds: float = 1800.0):
+    def __init__(self, max_sessions: int = 8, expiry_seconds: float = 1800.0, pinned_codes=None):
         if max_sessions < 1:
             raise ValueError("max_sessions must be positive")
         self._max_sessions = max_sessions
         self._expiry_seconds = expiry_seconds
+        self._pinned_codes = set(pinned_codes or set())
         self._sessions: Dict[str, Session] = {}
         self._revision = 0
+
+    def seed_configured(self, cc_code: int, summary: str, now: float) -> None:
+        """Register a configured terminal so it is always visible."""
+        from .models import CcState, Priority, Session
+        session_id = "configured-{}".format(cc_code)
+        self._sessions[session_id] = Session(
+            session_id=session_id,
+            cc_code=cc_code,
+            state=CcState.WORKING,
+            summary=summary,
+            priority=Priority.NORMAL,
+            cwd="",
+            updated_at=now,
+        )
+        self._revision += 1
 
     def apply(self, event: NormalizedEvent) -> Session:
         current = self._sessions.get(event.session_id)
@@ -38,7 +54,8 @@ class SessionRegistry:
         expired_ids = [
             session_id
             for session_id, session in self._sessions.items()
-            if now - session.updated_at >= self._expiry_seconds
+            if session.cc_code not in self._pinned_codes
+            and now - session.updated_at >= self._expiry_seconds
         ]
         for session_id in expired_ids:
             del self._sessions[session_id]

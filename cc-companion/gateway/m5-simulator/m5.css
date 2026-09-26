@@ -1,0 +1,252 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #111;
+    --device-bg: #2a2a2e;
+    --screen-bg: #000;
+    --screen-text: #0f0;
+    --screen-dim: #050;
+    --accent: #4a9a6a;
+    --btn-bg: #333;
+    --btn-active: #555;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Mono", monospace;
+    background: var(--bg);
+    color: #ccc;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 48px;
+    padding: 24px;
+}
+
+.m5-device {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.m5-buttons {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.m5-screen {
+    width: 135px;
+    height: 240px;
+    background: var(--screen-bg);
+    border: 3px solid var(--device-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.m5-screen-content {
+    padding: 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: "SF Mono", "Courier New", monospace;
+}
+
+.screen-title {
+    font-size: 10px;
+    color: var(--screen-text);
+    font-weight: 700;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--screen-dim);
+    padding-bottom: 4px;
+}
+
+.screen-body {
+    flex: 1;
+    font-size: 9px;
+    color: var(--screen-text);
+    line-height: 1.4;
+    overflow-y: auto;
+}
+
+.screen-footer {
+    font-size: 8px;
+    color: var(--screen-dim);
+    border-top: 1px solid var(--screen-dim);
+    padding-top: 4px;
+    min-height: 14px;
+}
+
+.m5-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--btn-bg);
+    border: 3px solid #444;
+    color: #888;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.m5-btn-b {
+    width: 40px;
+    height: 40px;
+    font-size: 11px;
+}
+
+.m5-btn:hover { border-color: var(--accent); }
+.m5-btn:active,
+.m5-btn.pressed {
+    background: var(--btn-active);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(0.95);
+}
+
+.info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 280px;
+}
+
+.info-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.gesture-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #999;
+}
+
+kbd {
+    padding: 2px 8px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    color: #ccc;
+    font-family: inherit;
+}
+
+.state-indicator {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+#state-label {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.feedback {
+    font-size: 0.8rem;
+    color: #888;
+    min-height: 20px;
+}
+
+/* Screen list items */
+.screen-list-item {
+    padding: 4px 6px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.screen-list-item.selected {
+    background: rgba(74, 154, 106, 0.3);
+    outline: 1px solid var(--accent);
+}
+
+.screen-list-code {
+    font-weight: 700;
+    min-width: 20px;
+}
+
+.screen-list-state {
+    font-size: 7px;
+    padding: 1px 3px;
+    background: #111;
+    border-radius: 2px;
+}
+
+.screen-list-state.WORKING { color: #4cf; }
+.screen-list-state.DONE { color: #4f4; }
+.screen-list-state.ERROR { color: #f44; }
+.screen-list-state.AWAITING_CONFIRMATION,
+.screen-list-state.AWAITING_INPUT { color: #fa4; }
+
+.screen-list-summary {
+    flex: 1;
+    font-size: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #0a0;
+}
+
+.screen-empty {
+    color: #040;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 8px;
+}
+
+.screen-recording {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.recording-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #f00;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.recording-text {
+    font-size: 9px;
+    color: #f00;
+    text-align: center;
+}
+
+.recording-timer {
+    font-size: 14px;
+    color: #f00;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    body { flex-direction: column; gap: 24px; }
+}

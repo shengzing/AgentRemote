@@ -18,6 +18,8 @@ class GatewayConfig:
     tmux_targets: Dict[int, str] = None
     pairing_store: str = ".cc-companion-pairings.json"
     pairing_code: Optional[str] = None
+    pairing_expiry_seconds: float = 600.0
+    require_pairing: bool = False
 
     def __post_init__(self):
         if not 1 <= self.max_sessions <= 8:
@@ -32,6 +34,10 @@ class GatewayConfig:
             or not self.pairing_code.isdigit()
         ):
             raise ConfigError("pairing_code must contain exactly six digits")
+        if self.pairing_expiry_seconds <= 0:
+            raise ConfigError("pairing_expiry_seconds must be positive")
+        if not isinstance(self.require_pairing, bool):
+            raise ConfigError("require_pairing must be a boolean")
         object.__setattr__(self, "tmux_targets", dict(self.tmux_targets or {}))
 
     @classmethod
@@ -48,6 +54,11 @@ class GatewayConfig:
             tmux_targets=parse_tmux_targets(os.environ.get("CC_COMPANION_TMUX_TARGETS", "")),
             pairing_store=os.environ.get("CC_COMPANION_PAIRING_STORE", ".cc-companion-pairings.json"),
             pairing_code=os.environ.get("CC_COMPANION_PAIRING_CODE") or None,
+            pairing_expiry_seconds=_positive_float(
+                os.environ.get("CC_COMPANION_PAIRING_EXPIRY", "600"),
+                "CC_COMPANION_PAIRING_EXPIRY",
+            ),
+            require_pairing=os.environ.get("CC_COMPANION_REQUIRE_PAIRING", "false").lower() in ("true", "1", "yes"),
         )
 
 

@@ -3,6 +3,7 @@
 import logging
 import os
 import secrets
+import time
 from pathlib import Path
 
 from aiohttp import web
@@ -27,12 +28,19 @@ def create_app(config: GatewayConfig = None, pairing_service=None, tmux_injector
     registry = SessionRegistry(
         max_sessions=config.max_sessions,
         expiry_seconds=config.session_expiry_seconds,
+        pinned_codes=set(config.tmux_targets.keys()),
     )
+
+    # Seed configured tmux terminals so they are always visible
+    now = time.time()
+    for cc_code, tmux_target in sorted(config.tmux_targets.items()):
+        registry.seed_configured(cc_code, tmux_target, now)
     app = web.Application()
 
     pairing_service = pairing_service or PairingService(
         PairingStore(Path(config.pairing_store)),
         pairing_code=config.pairing_code or _new_pairing_code(),
+        expires_after_seconds=config.pairing_expiry_seconds,
     )
     tmux_injector = tmux_injector or TmuxInjector(config.tmux_targets)
     recording_service = recording_service or RecordingService(UnconfiguredTranscriber())
@@ -42,6 +50,7 @@ def create_app(config: GatewayConfig = None, pairing_service=None, tmux_injector
         registry=registry,
         tmux=tmux_injector,
         recording=recording_service,
+        require_pairing=config.require_pairing,
     )
 
     def publish(session, revision):
@@ -67,7 +76,10 @@ def main() -> None:
     config = GatewayConfig.from_environment()
     pairing_code = config.pairing_code or _new_pairing_code()
     app = create_app(config)
-    logging.getLogger(__name__).info("Companion pairing code: %s", pairing_code)
+    if config.require_pairing:
+        logging.getLogger(__name__).info("Companion pairing code: %s", pairing_code)
+    else:
+        logging.getLogger(__name__).info("Pairing disabled: devices auto-register on connect")
     web.run_app(app, host=config.host, port=config.port)
 
 
