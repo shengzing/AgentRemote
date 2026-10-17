@@ -8,7 +8,6 @@ from pathlib import Path
 from access import CAPABILITY_DISPLAY, DeviceAccessLayer
 from adapters.pairing import PairingService, PairingStore
 from adapters.tmux import InjectError, InjectResult, TmuxInjector
-from domain.audio import AudioFormat, RecordingService
 from domain.models import CcState, Priority, Session
 from domain.registry import SessionRegistry
 
@@ -35,11 +34,6 @@ class FakeDeviceSession:
         self.closed = True
 
 
-class FakeTranscriber:
-    def transcribe(self, pcm, audio_format):
-        return "Allow this command"
-
-
 class DeviceAccessLayerTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -49,12 +43,10 @@ class DeviceAccessLayerTests(unittest.IsolatedAsyncioTestCase):
         )
         self.registry = SessionRegistry(max_sessions=8)
         self.tmux = TmuxInjector({1: "cc1"}, runner=_fake_tmux_runner)
-        self.recording = RecordingService(FakeTranscriber())
         self.access = DeviceAccessLayer(
             pairing=self.pairing,
             registry=self.registry,
             tmux=self.tmux,
-            recording=self.recording,
         )
 
     def tearDown(self):
@@ -86,7 +78,6 @@ class DeviceAccessLayerTests(unittest.IsolatedAsyncioTestCase):
             pairing=self.pairing,
             registry=self.registry,
             tmux=self.tmux,
-            recording=self.recording,
             require_pairing=True,
         )
         token = access.pair("dev-strict", "123456")
@@ -145,39 +136,6 @@ class DeviceAccessLayerTests(unittest.IsolatedAsyncioTestCase):
         self._pair_and_connect()
         self.access.disconnect("dev-1")
         self.assertFalse(self.access.is_online("dev-1"))
-
-    async def test_disconnect_cancels_active_recording(self):
-        session = self._pair_and_connect()
-        self.registry.apply(_make_event("s1", 1))
-        fmt = AudioFormat(sample_rate=16000, sample_width_bits=16, channels=1)
-        ok = self.access.begin_audio("dev-1", "rec-1", 1, fmt)
-        self.assertTrue(ok)
-        self.access.disconnect("dev-1")
-        result = self.access.finish_audio("dev-1", "rec-1")
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"], "RECORDING_NOT_ACTIVE")
-
-    async def test_begin_append_finish_audio(self):
-        self._pair_and_connect()
-        self.registry.apply(_make_event("s1", 1))
-        fmt = AudioFormat(sample_rate=16000, sample_width_bits=16, channels=1)
-        ok = self.access.begin_audio("dev-1", "rec-1", 1, fmt)
-        self.assertTrue(ok)
-        pcm = b"\x00" * 16000  # 0.5 seconds of silence
-        err = self.access.append_audio("dev-1", "rec-1", 0, pcm)
-        self.assertIsNone(err)
-        result = self.access.finish_audio("dev-1", "rec-1")
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["text"], "Allow this command")
-
-    async def test_append_audio_wrong_device_rejected(self):
-        self._pair_and_connect("dev-a")
-        self._pair_and_connect("dev-b")
-        self.registry.apply(_make_event("s1", 1))
-        fmt = AudioFormat(sample_rate=16000, sample_width_bits=16, channels=1)
-        self.access.begin_audio("dev-a", "rec-a", 1, fmt)
-        err = self.access.append_audio("dev-b", "rec-a", 0, b"\x00" * 100)
-        self.assertEqual(err, "RECORDING_NOT_ACTIVE")
 
     async def test_multi_device_concurrent(self):
         session_a = self._pair_and_connect("dev-a")

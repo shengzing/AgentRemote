@@ -7,7 +7,6 @@ from typing import Dict, Optional
 
 from adapters.pairing import PairingService
 from adapters.tmux import InjectError, InjectResult, TmuxInjector
-from domain.audio import AudioFormat, AudioValidationError, RecordingService
 from domain.registry import SessionRegistry
 from protocol.messages import PROTOCOL_VERSION
 
@@ -27,32 +26,19 @@ class DeviceAccessLayer:
         pairing: PairingService,
         registry: SessionRegistry,
         tmux: TmuxInjector,
-        recording: RecordingService,
         require_pairing: bool = False,
     ):
         self._pairing = pairing
         self._registry = registry
         self._tmux = tmux
-        self._recording = recording
         self._require_pairing = require_pairing
         self._sessions: Dict[str, DeviceSession] = {}
-        self._active_recordings: Dict[str, str] = {}
 
     # -- Lifecycle --
 
     def pair(self, device_id: str, code: str) -> Optional[str]:
         """Exchange a pairing code for a token. Returns None on failure."""
         return self._pairing.complete(device_id, code)
-
-    def auto_pair(self, device_id: str) -> str:
-        """Auto-pair for personal use: generate and store a token for the device."""
-        import secrets
-        token = secrets.token_urlsafe(32)
-        from adapters.pairing import _hash_token
-        tokens = self._pairing._store.load()
-        tokens[device_id] = _hash_token(token)
-        self._pairing._store.save(tokens)
-        return token
 
     def connect(self, session: DeviceSession, token: str) -> bool:
         """Authenticate and register a session. Does not push snapshot."""
@@ -62,15 +48,15 @@ class DeviceAccessLayer:
         return True
 
     def disconnect(self, device_id: str) -> None:
-        """Clean up: cancel active recording and unregister session."""
-        recording_id = self._active_recordings.pop(device_id, None)
-        if recording_id is not None:
-            self.cancel_audio(device_id, recording_id)
+        """Unregister a device session."""
         self._sessions.pop(device_id, None)
         LOGGER.info("Device disconnected: %s", device_id)
 
     def is_online(self, device_id: str) -> bool:
         return device_id in self._sessions
+
+    def registry_has_cc_code(self, cc_code: int) -> bool:
+        return self._registry.has_cc_code(cc_code, now=time.time())
 
     def online_device_ids(self) -> frozenset:
         return frozenset(self._sessions.keys())
@@ -88,51 +74,6 @@ class DeviceAccessLayer:
         else:
             result = self._tmux.inject(cc_code, text)
         return self._build_ack(cc_code, result)
-
-    def begin_audio(self, device_id: str, recording_id: str,
-                    cc_code: int, audio_format: AudioFormat) -> bool:
-        """Start a recording session. Returns False if device offline or already recording."""
-        if device_id not in self._sessions:
-            return False
-        if device_id in self._active_recordings:
-            return False
-        try:
-            self._recording.begin(recording_id, cc_code, audio_format)
-            self._active_recordings[device_id] = recording_id
-            return True
-        except AudioValidationError:
-            return False
-
-    def append_audio(self, device_id: str, recording_id: str,
-                     sequence: int, pcm: bytes) -> Optional[str]:
-        """Append a PCM chunk. Returns error description or None."""
-        if self._active_recordings.get(device_id) != recording_id:
-            return "RECORDING_NOT_ACTIVE"
-        try:
-            self._recording.append(recording_id, sequence, pcm)
-            return None
-        except AudioValidationError as error:
-            return str(error)
-
-    def finish_audio(self, device_id: str, recording_id: str) -> dict:
-        """Finish a recording -> transcribe -> return result dict."""
-        if self._active_recordings.get(device_id) != recording_id:
-            return {"ok": False, "error": "RECORDING_NOT_ACTIVE"}
-        self._active_recordings.pop(device_id, None)
-        try:
-            transcript = self._recording.finish(recording_id)
-            return {"ok": True, "text": transcript}
-        except AudioValidationError as error:
-            return {"ok": False, "error": str(error)}
-
-    def cancel_audio(self, device_id: str, recording_id: str) -> None:
-        """Cancel a recording."""
-        if self._active_recordings.get(device_id) == recording_id:
-            self._active_recordings.pop(device_id, None)
-        try:
-            self._recording.cancel(recording_id)
-        except AudioValidationError:
-            pass
 
     # -- Outbound push (gateway -> device, display-only) --
 

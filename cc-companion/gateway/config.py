@@ -19,7 +19,7 @@ class GatewayConfig:
     pairing_store: str = ".cc-companion-pairings.json"
     pairing_code: Optional[str] = None
     pairing_expiry_seconds: float = 600.0
-    require_pairing: bool = False
+    require_pairing: bool = True
 
     def __post_init__(self):
         if not 1 <= self.max_sessions <= 8:
@@ -58,7 +58,7 @@ class GatewayConfig:
                 os.environ.get("CC_COMPANION_PAIRING_EXPIRY", "600"),
                 "CC_COMPANION_PAIRING_EXPIRY",
             ),
-            require_pairing=os.environ.get("CC_COMPANION_REQUIRE_PAIRING", "false").lower() in ("true", "1", "yes"),
+            require_pairing=os.environ.get("CC_COMPANION_REQUIRE_PAIRING", "true").lower() in ("true", "1", "yes"),
         )
 
 

@@ -50,19 +50,19 @@ class HookHttpAdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(invalid_payload.status, 400)
         self.assertEqual(await invalid_payload.json(), {"error": "INVALID_HOOK"})
 
-    async def test_simulator_page_is_served_from_the_gateway_origin(self):
-        response = await self.client.get("/simulator")
+    async def test_terminal_page_is_served_from_the_gateway_origin(self):
+        response = await self.client.get("/terminal")
 
         self.assertEqual(response.status, 200)
         self.assertEqual(response.content_type, "text/html")
-        self.assertIn("Companion Simulator", await response.text())
+        self.assertIn("Claude Code Terminal", await response.text())
 
-    async def test_simulator_assets_are_served_from_the_gateway_origin(self):
-        stylesheet = await self.client.get("/simulator/simulator.css")
-        script = await self.client.get("/simulator/simulator.js")
+    async def test_terminal_assets_are_served_from_the_gateway_origin(self):
+        stylesheet = await self.client.get("/terminal/terminal.css")
+        script = await self.client.get("/terminal/terminal.js")
 
         self.assertEqual(stylesheet.status, 200)
-        self.assertIn("--paper", await stylesheet.text())
+        self.assertIn("--bg", await stylesheet.text())
         self.assertEqual(script.status, 200)
         self.assertIn("new WebSocket", await script.text())
 

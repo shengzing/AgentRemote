@@ -13,11 +13,9 @@ from adapters.hooks import HookService
 from adapters.http import HOOK_SERVICE_KEY, configure_routes as configure_http_routes
 from adapters.pairing import PairingService, PairingStore
 from adapters.realtime_ws import ACCESS_LAYER_KEY, configure_routes as configure_realtime_routes
-from adapters.transcription import UnconfiguredTranscriber
 from adapters.tmux import TmuxInjector
 from config import GatewayConfig
 from domain.registry import SessionRegistry
-from domain.audio import RecordingService
 
 
 CONFIG_KEY = web.AppKey("config", GatewayConfig)
@@ -31,10 +29,6 @@ def create_app(config: GatewayConfig = None, pairing_service=None, tmux_injector
         pinned_codes=set(config.tmux_targets.keys()),
     )
 
-    # Seed configured tmux terminals so they are always visible
-    now = time.time()
-    for cc_code, tmux_target in sorted(config.tmux_targets.items()):
-        registry.seed_configured(cc_code, tmux_target, now)
     app = web.Application()
 
     pairing_service = pairing_service or PairingService(
@@ -43,13 +37,10 @@ def create_app(config: GatewayConfig = None, pairing_service=None, tmux_injector
         expires_after_seconds=config.pairing_expiry_seconds,
     )
     tmux_injector = tmux_injector or TmuxInjector(config.tmux_targets)
-    recording_service = recording_service or RecordingService(UnconfiguredTranscriber())
-
     access_layer = DeviceAccessLayer(
         pairing=pairing_service,
         registry=registry,
         tmux=tmux_injector,
-        recording=recording_service,
         require_pairing=config.require_pairing,
     )
 

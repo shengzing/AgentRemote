@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CC Text Terminal</title>
+    <title>Claude Code Terminal</title>
     <link rel="stylesheet" href="/terminal/terminal.css">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>CC Terminal</h1>
+            <h1>Claude Code Terminal</h1>
             <div class="header-right">
                 <span id="cc-count" class="cc-count hidden">0 个终端</span>
                 <button id="refresh-btn" class="refresh-btn hidden" title="刷新终端列表">↻</button>
@@ -27,17 +27,7 @@
 
             <section id="text-section" class="text-section hidden">
                 <div id="selected-target" class="selected-target"></div>
-                <div class="input-header">
-                    <label class="input-label" for="command-input">输入指令</label>
-                    <button id="mic-btn" class="mic-btn" title="语音输入">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                        </svg>
-                    </button>
-                </div>
                 <textarea id="command-input" rows="5" placeholder="输入要发送到 Claude Code 的指令"></textarea>
-                <div id="speech-status" class="speech-status hidden">正在聆听...</div>
                 <button id="back-btn" class="back-btn">← 返回列表</button>
                 <button id="confirm-btn" class="confirm-btn">确认</button>
             </section>

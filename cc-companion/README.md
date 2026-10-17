@@ -1,79 +1,125 @@
-# Claude Code Companion
+# CC Companion Gateway
 
-## 网关（M1）
+CC Companion Gateway 是一个开源的本地 Claude Code 多实例控制网关。它通过 Claude Code Hooks 收集各个 Claude Code 会话状态，在浏览器 Web 终端中选择目标终端，并把文本安全地注入对应的 tmux 会话。
 
-当前网关通过 `POST /hook` 接收本机 Claude Code Hook 事件，为每个活动 `session_id` 分配稳定的 `#1` 至 `#8` 编号，并通过 `GET /ws` 提供已认证的 v1 WebSocket 服务。网关内部使用设备接入层（`access/`）统一管理配对认证和设备动作，适配器层仅做传输格式转换。
+## 核心能力
 
-### 设备接入层
+- 接收 Claude Code Hook 事件，归一化为 `WORKING`、`AWAITING_CONFIRMATION`、`DONE`、`ERROR` 状态
+- 为最多 8 个 Claude Code 会话分配稳定的 `#1` 至 `#8` 编号
+- 提供内置 Web 控制端：`/terminal`
+- 使用 WebSocket 实时推送会话快照和状态增量
+- 使用六位配对码完成设备配对，认证后才能发送指令
+- 通过 tmux literal mode 注入文本，不经过 shell，不拼接命令字符串
+- 多行输入只发送第一行，并在确认消息中返回 `MULTILINE_TRUNCATED`
+- 内置 49 个单元与集成测试
 
-网关的 `access/` 模块是所有设备（M5、Web 模拟器、HTML 语音终端、未来 REST/CLI）的统一接入点：
+## 快速开始
 
-- **必选动作**：配对认证、提交指令、回执反馈
-- **可选动作**：状态订阅（仅 display 设备）、目标选择、音频输入
-- 设备在 `device.hello` 中声明 `capabilities`，接入层按能力过滤推送
-- 纯输入设备（如 REST 端点）声明 `["input"]` 即可，不接收状态推送
-
-设备使用网关启动时显示的六位配对码完成配对，随后接收完整状态快照和状态增量；确认后的文本可以发送到对应的 tmux 目标。
-
-M5 的 Wi-Fi/WebSocket 硬件适配和真实语音采集仍待实现。当前可先用浏览器模拟器复用同一套 Gateway 协议，不需要烧录或操作实体设备。
-
-创建虚拟环境并安装 Gateway 依赖：
+### 1. 安装依赖
 
 ```sh
-cd cc-companion/gateway
+cd gateway
 python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+如果要运行测试：
+
+```sh
 .venv/bin/pip install -r requirements-dev.txt
 ```
 
-运行单元测试：
+### 2. 启动 tmux 会话
+
+网关通过 `cc_code -> tmux session` 映射注入文本。示例：
 
 ```sh
-cd cc-companion/gateway
-.venv/bin/python -m unittest discover -s tests -v
+tmux new -s cc1 'claude'
+tmux new -s cc2 'claude'
 ```
 
-在本机启动 Gateway：
+启动网关时指定映射：
 
 ```sh
-cd cc-companion/gateway
 CC_COMPANION_TMUX_TARGETS='1=cc1,2=cc2' .venv/bin/python app.py
 ```
 
-Hook 默认地址为 `http://127.0.0.1:7421/hook`。将 `cc-integration/settings.example.json` 的内容复制到适用的 Claude Code 设置范围中，把 `/absolute/path/to` 替换为本项目的绝对路径；Hook 转发脚本无需修改。即使 Gateway 暂时不可用，它也会向 Claude Code 返回成功，避免阻塞 Claude Code 工作流。
+网关默认监听 `http://127.0.0.1:7421`，并在终端输出六位配对码。
 
-不启动 Claude Code 也可以用以下命令验证 Hook：
+### 3. 接入 Claude Code Hooks
 
-```sh
-curl -sS -X POST http://127.0.0.1:7421/hook \
-  -H 'Content-Type: application/json' \
-  -d '{"session_id":"demo-1","hook_event_name":"Notification","message":"Waiting for your permission"}'
-```
+将 `cc-integration/settings.example.json` 中的 Hook 配置复制到 Claude Code 设置，并把 `/absolute/path/to` 替换为本仓库的绝对路径。
 
-预期得到一个 HTTP `202` 的 JSON 响应，其中包含 `accepted: true`、`cc_code: 1` 与 `AWAITING_CONFIRMATION`。
-
-正常使用时，请将 `CC_COMPANION_PAIRING_STORE` 设置为仓库外的文件路径。Gateway 仅在该文件中保存已配对设备 token 的哈希值；生成的配对码和原始 token 都不会写入该文件。
-
-## 电脑端模拟器（无需烧录）
-
-按上述方式启动 Gateway 后，打开 `http://127.0.0.1:7421/simulator`。首次连接时输入 Gateway 终端显示的六位配对码；后续连接会复用浏览器为该设备 ID 保存的本地 token，无需再次填写配对码。
-
-模拟器会接收与实体设备相同的快照和状态增量。按上方示例提交 Hook 后，屏幕会出现一个 CC 状态行；使用**短按**（或键盘 `J`）选择 CC 目标，使用**长按**（或 `R`）打开“模拟转写”输入框。发送文本会走正式的 `message.send` 与 tmux 注入路径。
-
-因此可以在不接触实体设备、麦克风或固件的前提下，完成以下完整验证：
+Hook 脚本默认发送到：
 
 ```text
-Claude Code Hook -> Gateway -> 浏览器模拟器 -> tmux 目标
+http://127.0.0.1:7421/hook
 ```
 
-## 输入终端（HTML 版）
+网关不可用时 Hook 会静默返回成功，不会阻塞 Claude Code。
 
-启动 Gateway 后打开 `http://127.0.0.1:7421/terminal`。这是基于浏览器的输入终端，操作流程：
+### 4. 使用 Web 终端
 
-1. 点击 **唤醒** 按钮连接 Gateway
+打开：
+
+```text
+http://127.0.0.1:7421/terminal
+```
+
+流程：
+
+1. 点击 **唤醒**
 2. 首次使用输入网关终端显示的六位配对码
-3. 点击 **数字键** 选择对应的 Claude Code 终端
-4. 在输入框中输入指令
-5. 点击 **发送** 或按 `Command/Ctrl + Enter`
-6. 文本会注入到选中的 CC tmux 会话
+3. 点击数字键选择目标 Claude Code 终端
+4. 输入指令
+5. 点击发送或按 `Command/Ctrl + Enter`
 
-当前版本使用打字输入替代语音输入，便于稳定验证完整链路；后续会恢复可选语音输入。
+## 配置
+
+| 环境变量 | 默认值 | 说明 |
+|---|---:|---|
+| `CC_COMPANION_HOST` | `127.0.0.1` | HTTP/WebSocket 监听地址 |
+| `CC_COMPANION_PORT` | `7421` | HTTP/WebSocket 监听端口 |
+| `CC_COMPANION_MAX_SESSIONS` | `8` | 最多跟踪的 Claude Code 会话数 |
+| `CC_COMPANION_SESSION_EXPIRY` | `1800` | 会话过期秒数 |
+| `CC_COMPANION_TMUX_TARGETS` | 空 | `cc_code=tmux_session` 映射 |
+| `CC_COMPANION_PAIRING_STORE` | `.cc-companion-pairings.json` | token 哈希存储路径 |
+| `CC_COMPANION_PAIRING_CODE` | 随机 | 固定六位配对码 |
+| `CC_COMPANION_PAIRING_EXPIRY` | `600` | 配对码有效期秒数 |
+| `CC_COMPANION_REQUIRE_PAIRING` | `true` | 是否强制配对认证 |
+
+生产使用建议把 `CC_COMPANION_PAIRING_STORE` 放在仓库外。网关只保存 token 哈希，不保存原始 token。
+
+## 测试
+
+```sh
+cd gateway
+.venv/bin/python -m unittest discover -s tests
+```
+
+## 目录结构
+
+```text
+gateway/
+  access/       设备接入、认证和动作分发
+  adapters/     HTTP、WebSocket、Hook、tmux 适配器
+  domain/       会话状态与归一化逻辑
+  protocol/     WebSocket 协议校验
+  tests/        单元与集成测试
+  voice-terminal/  Web 控制端静态资源
+cc-integration/
+  hook.py       Claude Code Hook 转发脚本
+```
+
+## 安全说明
+
+- 默认只监听 `127.0.0.1`，不自动暴露到公网
+- Web 终端必须先完成配对码认证
+- tmux 注入使用参数数组和 literal mode，不调用 shell
+- 多行文本会被截断为第一行，避免意外注入多条命令
+- 配对码有效期默认 10 分钟
+- token 只在本地保存哈希
+
+## License
+
+MIT
