@@ -1,6 +1,16 @@
-# CC Companion Gateway
+# AgentRemote
 
-CC Companion Gateway 是一个开源的本地 Claude Code 多实例控制网关。它通过 Claude Code Hooks 收集各个 Claude Code 会话状态，在浏览器 Web 终端中选择目标终端，并把文本安全地注入对应的 tmux 会话。
+AgentRemote 是一个开源的本地 Claude Code 多实例控制网关。它通过 Claude Code Hooks 收集各个 Claude Code 会话状态，在浏览器 Web 终端中选择目标终端，并把文本安全地注入对应的 tmux 会话。
+
+## 界面预览
+
+配对码认证后，浏览器里可以直接看到所有 tmux 会话的实时状态，并通过语音或文字向指定终端发送指令：
+
+![Web 终端列表](images/iShot_2026-10-18_06.33.37.png)
+
+Web 终端（下方）通过网关同时驱动两个 tmux 中的 Claude Code 会话（上方 `cc1` / `cc2`），并支持语音识别输入：
+
+![语音控制两个 tmux 会话](images/iShot_2026-10-18_06.55.09.png)
 
 ## 核心能力
 
