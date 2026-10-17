@@ -13,12 +13,17 @@ const elements = {
     ccEmpty: document.getElementById("cc-empty"),
     textSection: document.getElementById("text-section"),
     selectedTarget: document.getElementById("selected-target"),
+    micBtn: document.getElementById("mic-btn"),
+    speechStatus: document.getElementById("speech-status"),
     commandInput: document.getElementById("command-input"),
     confirmBtn: document.getElementById("confirm-btn"),
     backBtn: document.getElementById("back-btn"),
     resultSection: document.getElementById("result-section"),
     resultMessage: document.getElementById("result-message"),
     newRoundBtn: document.getElementById("new-round-btn"),
+    pairSection: document.getElementById("pair-section"),
+    pairCode: document.getElementById("pair-code"),
+    pairBtn: document.getElementById("pair-btn"),
 };
 
 const state = {
@@ -31,6 +36,10 @@ const state = {
     phase: "idle",
     draft: "",
     refreshing: false,
+    lastError: null,
+    pendingPairCode: null,
+    recognition: null,
+    isRecording: false,
 };
 
 const STATUS_TEXT = {
@@ -57,7 +66,7 @@ function setFeedback(message, type) {
 }
 
 function showSection(...sections) {
-    const all = ["ccList", "textSection", "resultSection"];
+    const all = ["ccList", "textSection", "resultSection", "pairSection"];
     all.forEach((name) => {
         if (sections.includes(name)) {
             elements[name].classList.remove("hidden");
@@ -92,22 +101,34 @@ function connectWebSocket() {
 
     state.ws.onopen = () => {
         setFeedback("已连接网关...", "info");
-        sendHello(getStoredToken() || "");
+        if (state.pendingPairCode) {
+            sendMessage({
+                version: PROTOCOL_VERSION,
+                type: "pair.complete",
+                device_id: state.deviceId,
+                code: state.pendingPairCode,
+            });
+        } else {
+            sendHello(getStoredToken() || "");
+        }
     };
 
-    state.ws.onclose = () => {
-        setStatus("idle");
+    state.ws.onclose = (event) => {
         state.authenticated = false;
-        if (state.phase === "sent") {
-            // keep success state
-        } else {
-            setFeedback("连接已断开，点击唤醒重新连接", "error");
-        }
         elements.wakeBtn.disabled = false;
         elements.wakeBtn.textContent = "唤醒";
+        if (state.phase === "pairing") {
+            setFeedback("连接已断开，请输入配对码后点击确认配对", "error");
+        } else if (state.lastError) {
+            setFeedback("连接断开: " + state.lastError, "error");
+        } else {
+            state.phase = "idle";
+            setFeedback("连接已断开，点击唤醒重新连接", "error");
+        }
     };
 
     state.ws.onerror = () => {
+        state.lastError = "连接网关失败";
         setStatus("error");
         setFeedback("连接网关失败，请确认网关已启动", "error");
     };
@@ -140,6 +161,9 @@ function sendMessage(message) {
 
 function handleMessage(message) {
     switch (message.type) {
+        case "pair.complete":
+            handlePairComplete(message);
+            break;
         case "device.ready":
             state.authenticated = true;
             if (message.token) {
@@ -169,7 +193,14 @@ function handleMessage(message) {
             handleAck(message);
             break;
         case "device.error":
-            showError(message.error);
+            if (message.error === "UNAUTHORIZED") {
+                state.lastError = "UNAUTHORIZED";
+                localStorage.removeItem("cc-terminal-token");
+                state.token = null;
+                showPairSection();
+            } else {
+                showError(message.error);
+            }
             break;
     }
 }
@@ -250,10 +281,80 @@ function updateConfirmButton() {
     }
 }
 
+// -- Browser Speech Recognition (HTML terminal only) --
+
+function toggleSpeechRecognition() {
+    if (state.isRecording) {
+        stopSpeechRecognition();
+    } else {
+        startSpeechRecognition();
+    }
+}
+
+function startSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        setFeedback("当前浏览器不支持语音识别，请使用 Chrome", "error");
+        return;
+    }
+
+    state.recognition = new SpeechRecognition();
+    state.recognition.lang = "zh-CN";
+    state.recognition.continuous = true;
+    state.recognition.interimResults = true;
+
+    state.recognition.onresult = (event) => {
+        let transcript = "";
+        for (let index = 0; index < event.results.length; index++) {
+            transcript += event.results[index][0].transcript;
+        }
+        elements.commandInput.value = transcript;
+        updateConfirmButton();
+    };
+
+    state.recognition.onerror = (event) => {
+        if (event.error !== "aborted" && event.error !== "no-speech") {
+            setFeedback(`语音识别错误: ${event.error}`, "error");
+        }
+    };
+
+    state.recognition.onend = () => {
+        if (state.isRecording) {
+            state.recognition.start();
+        }
+    };
+
+    state.isRecording = true;
+    elements.micBtn.classList.add("recording");
+    elements.micBtn.title = "停止语音输入";
+    elements.speechStatus.classList.remove("hidden");
+    elements.commandInput.placeholder = "正在聆听，请说话...";
+    state.recognition.start();
+    setFeedback("语音识别中，点击麦克风停止", "info");
+}
+
+function stopSpeechRecognition() {
+    if (!state.isRecording) return;
+    state.isRecording = false;
+
+    if (state.recognition) {
+        state.recognition.stop();
+    }
+    elements.micBtn.classList.remove("recording");
+    elements.micBtn.title = "语音输入";
+    elements.speechStatus.classList.add("hidden");
+    elements.commandInput.placeholder = "输入要发送到 Claude Code 的指令";
+    setFeedback("语音识别已停止，可编辑文本后发送", "info");
+    elements.commandInput.focus();
+}
 
 function sendMessageToCc() {
     const text = elements.commandInput.value.trim();
     if (!state.selectedCcCode || !text) return;
+
+    if (state.isRecording) {
+        stopSpeechRecognition();
+    }
 
     setStatus("sending");
     elements.confirmBtn.disabled = true;
@@ -312,11 +413,62 @@ function showError(message) {
 }
 
 function startNewRound() {
+    if (state.isRecording) {
+        stopSpeechRecognition();
+    }
     state.selectedCcCode = null;
     elements.commandInput.value = "";
     elements.selectedTarget.textContent = "";
     setStatus("selecting");
     showSection("ccList");
+}
+
+function showPairSection() {
+    state.phase = "pairing";
+    setStatus("error");
+    setFeedback("需要配对：请输入网关终端显示的六位配对码", "error");
+    showSection("pairSection");
+    elements.pairCode.value = "";
+    elements.pairCode.focus();
+}
+
+function completePairing() {
+    const code = elements.pairCode.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+        setFeedback("配对码必须是六位数字", "error");
+        return;
+    }
+    elements.pairBtn.disabled = true;
+    setFeedback("正在验证配对码...", "info");
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        sendPairCode(code);
+    } else {
+        state.pendingPairCode = code;
+        connectWebSocket();
+    }
+}
+
+function sendPairCode(code) {
+    sendMessage({
+        version: PROTOCOL_VERSION,
+        type: "pair.complete",
+        device_id: state.deviceId,
+        code: code,
+    });
+}
+
+function handlePairComplete(message) {
+    elements.pairBtn.disabled = false;
+    state.pendingPairCode = null;
+    if (message.ok) {
+        storeToken(message.token);
+        setFeedback("配对成功，正在接入网关...", "success");
+        setStatus("connecting");
+        sendHello(message.token);
+    } else {
+        setFeedback("配对失败，请检查配对码是否正确", "error");
+        elements.pairCode.focus();
+    }
 }
 
 function escapeHtml(text) {
@@ -326,7 +478,7 @@ function escapeHtml(text) {
 }
 
 elements.wakeBtn.addEventListener("click", () => {
-    if (state.phase === "idle" || state.phase === "error") {
+    if (state.phase === "idle" || state.phase === "error" || state.phase === "pairing" || state.phase === "selecting" || state.phase === "sent") {
         elements.wakeBtn.disabled = true;
         elements.wakeBtn.textContent = "已唤醒";
         setStatus("connecting");
@@ -368,4 +520,15 @@ elements.backBtn.addEventListener("click", startNewRound);
 elements.newRoundBtn.addEventListener("click", startNewRound);
 
 
+elements.micBtn.addEventListener("click", toggleSpeechRecognition);
+
 elements.refreshBtn.addEventListener("click", requestSnapshot);
+
+elements.pairBtn.addEventListener("click", completePairing);
+
+elements.pairCode.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        completePairing();
+    }
+});

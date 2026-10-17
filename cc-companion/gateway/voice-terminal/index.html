@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Code Terminal</title>
-    <link rel="stylesheet" href="/terminal/terminal.css">
+    <link rel="stylesheet" href="/terminal/terminal.css?v=2">
 </head>
 <body>
     <div id="app">
@@ -20,6 +20,13 @@
         <div id="feedback" class="feedback">点击下方按钮连接网关</div>
 
         <main>
+            <section id="pair-section" class="pair-section hidden">
+                <h2>首次使用</h2>
+                <p class="pair-hint">请输入网关终端显示的六位配对码</p>
+                <input id="pair-code" class="pair-code" maxlength="6" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+                <button id="pair-btn" class="primary-btn pair-btn">确认配对</button>
+            </section>
+
             <section id="cc-list" class="cc-list hidden">
                 <div id="cc-empty" class="cc-empty hidden">暂无已接入的终端</div>
                 <div id="cc-rows"></div>
@@ -27,7 +34,20 @@
 
             <section id="text-section" class="text-section hidden">
                 <div id="selected-target" class="selected-target"></div>
+                <div class="input-header">
+                    <label class="input-label" for="command-input">输入指令</label>
+                    <button id="mic-btn" class="mic-btn" title="语音输入" type="button">
+                        <svg class="mic-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                        <span class="voice-wave" aria-hidden="true">
+                            <i></i><i></i><i></i><i></i>
+                        </span>
+                    </button>
+                </div>
                 <textarea id="command-input" rows="5" placeholder="输入要发送到 Claude Code 的指令"></textarea>
+                <div id="speech-status" class="speech-status hidden">正在聆听...</div>
                 <button id="back-btn" class="back-btn">← 返回列表</button>
                 <button id="confirm-btn" class="confirm-btn">确认</button>
             </section>
@@ -41,6 +61,6 @@
         <button id="wake-btn" class="wake-btn">唤醒</button>
     </div>
 
-    <script src="/terminal/terminal.js"></script>
+    <script src="/terminal/terminal.js?v=2"></script>
 </body>
 </html>

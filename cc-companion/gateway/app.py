@@ -28,6 +28,9 @@ def create_app(config: GatewayConfig = None, pairing_service=None, tmux_injector
         expiry_seconds=config.session_expiry_seconds,
         pinned_codes=set(config.tmux_targets.keys()),
     )
+    import time as _time
+    for cc_code, target in sorted(config.tmux_targets.items()):
+        registry.seed_configured(cc_code, "tmux:{}".format(target), now=_time.time())
 
     app = web.Application()
 
