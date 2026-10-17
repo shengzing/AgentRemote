@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r gateway/requirements.txt -r gateway/requirements-dev.txt
+          pip install -r cc-companion/gateway/requirements.txt -r cc-companion/gateway/requirements-dev.txt
       - name: Run tests
-        working-directory: gateway
+        working-directory: cc-companion/gateway
         run: python -m unittest discover -s tests -v
