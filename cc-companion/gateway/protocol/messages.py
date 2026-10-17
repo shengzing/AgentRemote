@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 
 DEFAULT_CAPABILITIES = frozenset({"input", "display"})
-VALID_CAPABILITIES = frozenset({"input", "display", "audio", "select"})
+VALID_CAPABILITIES = frozenset({"input", "display", "select"})
 
 
 PROTOCOL_VERSION = 1
@@ -51,28 +51,6 @@ def decode_client_message(payload: Dict[str, Any]) -> Dict[str, Any]:
             "type": "cc.select",
             "cc_code": cc_code,
         }
-    if message_type == "audio.start":
-        recording_id = _recording_id(payload.get("recording_id"))
-        cc_code = payload.get("cc_code")
-        if not isinstance(cc_code, int) or not 1 <= cc_code <= MAX_CC_CODE:
-            raise ProtocolError("cc_code must be between 1 and 8")
-        if (
-            payload.get("sample_rate") != 16000
-            or payload.get("sample_width_bits") != 16
-            or payload.get("channels") != 1
-        ):
-            raise ProtocolError("audio must be 16-kHz, 16-bit mono PCM")
-        return {
-            "version": PROTOCOL_VERSION,
-            "type": "audio.start",
-            "recording_id": recording_id,
-            "cc_code": cc_code,
-            "sample_rate": 16000,
-            "sample_width_bits": 16,
-            "channels": 1,
-        }
-    if message_type == "audio.end":
-        return {"version": PROTOCOL_VERSION, "type": "audio.end", "recording_id": _recording_id(payload.get("recording_id"))}
     if message_type == "message.send":
         cc_code = payload.get("cc_code")
         text = payload.get("text")
@@ -98,12 +76,6 @@ def _device_id(value: Any) -> str:
 def _pairing_code(value: Any) -> str:
     if not isinstance(value, str) or len(value) != 6 or not value.isdigit():
         raise ProtocolError("code must contain six digits")
-    return value
-
-
-def _recording_id(value: Any) -> str:
-    if not isinstance(value, str) or not 1 <= len(value) <= 64 or value.strip() != value:
-        raise ProtocolError("recording_id must be a non-empty identifier")
     return value
 
 

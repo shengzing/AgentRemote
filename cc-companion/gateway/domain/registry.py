@@ -36,7 +36,16 @@ class SessionRegistry:
 
     def apply(self, event: NormalizedEvent) -> Session:
         current = self._sessions.get(event.session_id)
-        cc_code = current.cc_code if current else self._allocate_code()
+        if current:
+            cc_code = current.cc_code
+        else:
+            used = {session.cc_code for session in self._sessions.values()}
+            cc_code = next((code for code in sorted(self._pinned_codes) if code not in used), None)
+            if cc_code is None:
+                cc_code = self._allocate_code()
+        configured_id = "configured-{}".format(cc_code)
+        if configured_id in self._sessions and configured_id != event.session_id:
+            del self._sessions[configured_id]
         session = Session(
             session_id=event.session_id,
             cc_code=cc_code,

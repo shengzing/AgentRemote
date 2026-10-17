@@ -18,19 +18,6 @@ async def health(_: web.Request) -> web.Response:
     return web.json_response({"ok": True})
 
 
-async def simulator(request: web.Request) -> web.FileResponse:
-    simulator_root = Path(__file__).resolve().parent.parent / "simulator"
-    return web.FileResponse(simulator_root / "index.html")
-
-
-async def simulator_asset(request: web.Request) -> web.FileResponse:
-    asset_name = request.match_info["asset"]
-    if asset_name not in {"simulator.css", "simulator.js"}:
-        raise web.HTTPNotFound()
-    simulator_root = Path(__file__).resolve().parent.parent / "simulator"
-    return web.FileResponse(simulator_root / asset_name)
-
-
 async def voice_terminal(request: web.Request) -> web.FileResponse:
     terminal_root = Path(__file__).resolve().parent.parent / "voice-terminal"
     return web.FileResponse(terminal_root / "index.html")
@@ -42,19 +29,6 @@ async def voice_terminal_asset(request: web.Request) -> web.FileResponse:
         raise web.HTTPNotFound()
     terminal_root = Path(__file__).resolve().parent.parent / "voice-terminal"
     return web.FileResponse(terminal_root / asset_name)
-
-
-async def m5_simulator(request: web.Request) -> web.FileResponse:
-    simulator_root = Path(__file__).resolve().parent.parent / "m5-simulator"
-    return web.FileResponse(simulator_root / "index.html")
-
-
-async def m5_simulator_asset(request: web.Request) -> web.FileResponse:
-    asset_name = request.match_info["asset"]
-    if asset_name not in {"m5.css", "m5.js"}:
-        raise web.HTTPNotFound()
-    simulator_root = Path(__file__).resolve().parent.parent / "m5-simulator"
-    return web.FileResponse(simulator_root / asset_name)
 
 
 async def receive_hook(request: web.Request) -> web.Response:
@@ -88,9 +62,5 @@ async def receive_hook(request: web.Request) -> web.Response:
 def configure_routes(app: web.Application) -> None:
     app.router.add_get("/health", health)
     app.router.add_post("/hook", receive_hook)
-    app.router.add_get("/simulator", simulator)
-    app.router.add_get("/simulator/{asset}", simulator_asset)
     app.router.add_get("/terminal", voice_terminal)
     app.router.add_get("/terminal/{asset}", voice_terminal_asset)
-    app.router.add_get("/m5", m5_simulator)
-    app.router.add_get("/m5/{asset}", m5_simulator_asset)

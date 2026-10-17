@@ -39,35 +39,6 @@ class ProtocolMessageTests(unittest.TestCase):
                 {"version": 1, "type": "pair.complete", "device_id": "stick", "code": "123"}
             )
 
-    def test_audio_start_and_end_messages_validate_the_fixed_mvp_format(self):
-        start = decode_client_message(
-            {
-                "version": 1,
-                "type": "audio.start",
-                "recording_id": "recording-1",
-                "cc_code": 2,
-                "sample_rate": 16000,
-                "sample_width_bits": 16,
-                "channels": 1,
-            }
-        )
-        end = decode_client_message({"version": 1, "type": "audio.end", "recording_id": "recording-1"})
-
-        self.assertEqual(start["sample_rate"], 16000)
-        self.assertEqual(end["recording_id"], "recording-1")
-        with self.assertRaises(ProtocolError):
-            decode_client_message(
-                {
-                    "version": 1,
-                    "type": "audio.start",
-                    "recording_id": "recording-1",
-                    "cc_code": 2,
-                    "sample_rate": 8000,
-                    "sample_width_bits": 16,
-                    "channels": 1,
-                }
-            )
-
     def test_hello_without_capabilities_gets_default(self):
         payload = decode_client_message(
             {"version": 1, "type": "device.hello", "device_id": "dev-1", "token": "t"}
@@ -93,12 +64,12 @@ class ProtocolMessageTests(unittest.TestCase):
                 "type": "device.hello",
                 "device_id": "m5-1",
                 "token": "t",
-                "capabilities": ["input", "display", "audio", "select"],
+                "capabilities": ["input", "display", "select"],
             }
         )
         self.assertEqual(
             payload["capabilities"],
-            frozenset({"input", "display", "audio", "select"}),
+            frozenset({"input", "display", "select"}),
         )
 
     def test_hello_with_invalid_capabilities_is_rejected(self):

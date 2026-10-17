@@ -231,47 +231,6 @@ h2 {
     align-items: center;
 }
 
-.mic-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s;
-    padding: 0;
-}
-
-.mic-btn:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-}
-
-.mic-btn.recording {
-    color: var(--danger);
-    border-color: var(--danger);
-    background: rgba(170, 74, 74, 0.15);
-    animation: mic-pulse 1.5s infinite;
-}
-
-@keyframes mic-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-.speech-status {
-    font-size: 0.75rem;
-    color: var(--info);
-    padding: 6px 10px;
-    background: rgba(90, 138, 170, 0.1);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--info);
-}
-
 #command-input {
     width: 100%;
     padding: 12px;

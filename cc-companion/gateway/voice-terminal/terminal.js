@@ -13,8 +13,6 @@ const elements = {
     ccEmpty: document.getElementById("cc-empty"),
     textSection: document.getElementById("text-section"),
     selectedTarget: document.getElementById("selected-target"),
-    micBtn: document.getElementById("mic-btn"),
-    speechStatus: document.getElementById("speech-status"),
     commandInput: document.getElementById("command-input"),
     confirmBtn: document.getElementById("confirm-btn"),
     backBtn: document.getElementById("back-btn"),
@@ -33,8 +31,6 @@ const state = {
     phase: "idle",
     draft: "",
     refreshing: false,
-    recognition: null,
-    isRecording: false,
 };
 
 const STATUS_TEXT = {
@@ -254,78 +250,10 @@ function updateConfirmButton() {
     }
 }
 
-// -- Browser Speech Recognition (HTML terminal only) --
-
-function toggleSpeechRecognition() {
-    if (state.isRecording) {
-        stopSpeechRecognition();
-    } else {
-        startSpeechRecognition();
-    }
-}
-
-function startSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        setFeedback("当前浏览器不支持语音识别，请使用 Chrome", "error");
-        return;
-    }
-
-    state.recognition = new SpeechRecognition();
-    state.recognition.lang = "zh-CN";
-    state.recognition.continuous = true;
-    state.recognition.interimResults = true;
-
-    state.recognition.onresult = (event) => {
-        let transcript = "";
-        for (let i = 0; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-        }
-        elements.commandInput.value = transcript;
-        updateConfirmButton();
-    };
-
-    state.recognition.onerror = (event) => {
-        if (event.error !== "aborted" && event.error !== "no-speech") {
-            setFeedback(`语音识别错误: ${event.error}`, "error");
-        }
-    };
-
-    state.recognition.onend = () => {
-        if (state.isRecording) {
-            state.recognition.start();
-        }
-    };
-
-    state.isRecording = true;
-    elements.micBtn.classList.add("recording");
-    elements.speechStatus.classList.remove("hidden");
-    elements.commandInput.placeholder = "正在聆听，请说话...";
-    state.recognition.start();
-    setFeedback("语音识别中，点击麦克风停止", "info");
-}
-
-function stopSpeechRecognition() {
-    if (!state.isRecording) return;
-    state.isRecording = false;
-
-    if (state.recognition) {
-        state.recognition.stop();
-    }
-    elements.micBtn.classList.remove("recording");
-    elements.speechStatus.classList.add("hidden");
-    elements.commandInput.placeholder = "输入要发送到 Claude Code 的指令";
-    setFeedback("语音识别已停止，可编辑文本后发送", "info");
-    elements.commandInput.focus();
-}
 
 function sendMessageToCc() {
     const text = elements.commandInput.value.trim();
     if (!state.selectedCcCode || !text) return;
-
-    if (state.isRecording) {
-        stopSpeechRecognition();
-    }
 
     setStatus("sending");
     elements.confirmBtn.disabled = true;
@@ -384,9 +312,6 @@ function showError(message) {
 }
 
 function startNewRound() {
-    if (state.isRecording) {
-        stopSpeechRecognition();
-    }
     state.selectedCcCode = null;
     elements.commandInput.value = "";
     elements.selectedTarget.textContent = "";
@@ -442,6 +367,5 @@ elements.backBtn.addEventListener("click", startNewRound);
 
 elements.newRoundBtn.addEventListener("click", startNewRound);
 
-elements.micBtn.addEventListener("click", toggleSpeechRecognition);
 
 elements.refreshBtn.addEventListener("click", requestSnapshot);
