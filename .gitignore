@@ -18,3 +18,7 @@ gateway/__pycache__/
 gateway/*/__pycache__/
 firmware/build/
 未命名文件夹/
+
+# 本地配置：Claude Code 与 GitHub 元数据不入库
+.claude/
+.github/
